@@ -6,6 +6,21 @@ from get_weather import get_hist_weather
 
 
 def calc_consumption(latitude, longitude):
+        """
+        calc_consumption(latitude, longitude) -> pandas.DataFrame
+
+        Inputs:
+        - latitude (float): latitude in decimal degrees
+        - longitude (float): longitude in decimal degrees
+
+        Output:
+        - pandas.DataFrame: hourly, timezone-aware (UTC) DataFrame joining
+            historical weather data with electricity consumption.
+
+        Brief:
+        Loads consumption CSVs, resamples to hourly sums, fetches historical
+        weather for the date range, and returns a joined DataFrame.
+        """
 
     # -------INPUT---------
     consumption_df = load_csv('data', edistribuzione_format=True)
@@ -32,15 +47,7 @@ def calc_consumption(latitude, longitude):
         how='inner'
     ).reset_index()
 
-    return df
-
-    """
-    # Merge consumption and weather data
-    df = weather_data.set_index('date').join(
-        consumption_df.set_index('datetime'),
-        how='inner'
-    ).reset_index() """
-    
+    return df  
 
 
 def main():    
