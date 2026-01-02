@@ -5,6 +5,8 @@ build/
 dist/
 wheels/
 *.egg-info
+.cache.sqlite
+.consumption_model.pkl
 
 # Virtual environments
 .venv

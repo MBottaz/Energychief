@@ -51,7 +51,7 @@ def get_hist_weather (latitude, longitude, start_date, end_date) -> pd.DataFrame
         inclusive = "left"
     )}
 
-    hourly_data["temperature_2m"] = hourly_temperature_2m
+    hourly_data["temperature"] = hourly_temperature_2m
     hourly_data["global_tilted_irradiance"] = hourly_global_tilted_irradiance
 
     hourly_dataframe = pd.DataFrame(data = hourly_data)

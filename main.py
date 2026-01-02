@@ -1,26 +1,26 @@
 import pandas as pd
 
 from dataprep import load_csv
-# from EnergyML import create_features
+from EnergyML import train_consumption_model, create_consumption_features
 from get_weather import get_hist_weather
 
 
-def calc_consumption(latitude, longitude):
-        """
-        calc_consumption(latitude, longitude) -> pandas.DataFrame
+def get_consumption(latitude, longitude):
+    """
+    get_consumption(latitude, longitude) -> pandas.DataFrame
 
-        Inputs:
-        - latitude (float): latitude in decimal degrees
-        - longitude (float): longitude in decimal degrees
+    Inputs:
+    - latitude (float): latitude in decimal degrees
+    - longitude (float): longitude in decimal degrees
 
-        Output:
-        - pandas.DataFrame: hourly, timezone-aware (UTC) DataFrame joining
-            historical weather data with electricity consumption.
+    Output:
+    - pandas.DataFrame: hourly, timezone-aware (UTC) DataFrame joining
+        historical weather data with electricity consumption.
 
-        Brief:
-        Loads consumption CSVs, resamples to hourly sums, fetches historical
-        weather for the date range, and returns a joined DataFrame.
-        """
+    Description:
+    Loads consumption CSVs, resamples to hourly sums, fetches historical
+    weather for the date range, and returns a joined DataFrame.
+    """
 
     # -------INPUT---------
     consumption_df = load_csv('data', edistribuzione_format=True)
@@ -47,7 +47,12 @@ def calc_consumption(latitude, longitude):
         how='inner'
     ).reset_index()
 
-    return df  
+    df['date'] = pd.to_datetime(df['date'])
+
+    return df
+
+
+
 
 
 def main():    
@@ -56,10 +61,19 @@ def main():
     latitude = 41.89
     longitude = 12.51
 
-    df =calc_consumption(latitude, longitude)
+    df =get_consumption(latitude, longitude)
 
-    print(df.head)
-    print(df.tail)
+    results = train_consumption_model(
+        df=df,
+        feature_function=create_consumption_features,
+        n_splits=5,
+        save_path='consumption_model.pkl'
+    )
+    
+    # Access trained model and metrics
+    trained_model = results['model']
+    print("\nCross-validation scores:")
+    print(results['cv_scores'])
 
 
 
