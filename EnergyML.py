@@ -6,7 +6,7 @@ from sklearn.metrics import mean_absolute_error, r2_score
 
 
 
-# THIS IS A MOCKUP CODE GENERATED FROM CLAUDE, NEEDS TO BE FIXED!!!! Fare anche gli init
+# THIS IS A MOCKUP CODE GENERATED FROM CLAUDE, NEEDS TO BE FIXED!!!! Fare anche gli add
 """ Additional Weather Data to Consider
 Since you can get more weather data, I'd recommend adding:
 High Priority:
@@ -29,7 +29,6 @@ def create_features(df):
     df['hour'] = df.index.hour
     df['day_of_week'] = df.index.dayofweek
     df['month'] = df.index.month
-    df['is_weekend'] = (df['day_of_week'] >= 5).astype(int)
     
     # Lag features
     df['consumption_lag_1h'] = df['consumption'].shift(1)
@@ -44,6 +43,10 @@ def create_features(df):
     df['temp_change_1h'] = df['temperature'].diff(1)
     
     return df.dropna()  # Remove NaN from lag/rolling features
+
+df_features = create_features(df)  # Assuming 'df' is your original dataframe
+y = df_features['consumption']
+X = df_features.drop('consumption', axis=1)
 
 # Model setup
 model = LGBMRegressor(

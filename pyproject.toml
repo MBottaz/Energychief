@@ -5,8 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "lightgbm>=4.6.0",
     "openmeteo-requests>=1.7.4",
     "pandas>=2.3.3",
     "requests-cache>=1.2.1",
     "retry-requests>=2.0.0",
+    "scikit-learn>=1.8.0",
 ]
