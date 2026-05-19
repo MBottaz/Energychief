@@ -1,0 +1,22 @@
+[project]
+name = "energychief"
+version = "0.1.0"
+description = "Telegram bot for Renewable Energy Communities (CER)"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "python-telegram-bot>=21",
+    "apscheduler>=4",
+    "httpx",
+    "tenacity",
+    "aiosqlite",
+    "openmeteo-requests",
+    "pydantic-settings",
+    "pandas",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "pytest-asyncio",
+]
