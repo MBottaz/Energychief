@@ -2,17 +2,17 @@
 from telegram.ext import ApplicationBuilder, CommandHandler
 
 from config import TELEGRAM_TOKEN
-from bot.handlers import start
+from bot.handlers import start, help_command, status
 
 
 def main() -> None:
-    # Build the bot application using the token from config
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    # Register handlers
+    # Register all command handlers
     app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("status", status))
 
-    # Start polling (checks Telegram for new messages every few seconds)
     print("Bot is running... Press Ctrl+C to stop.")
     app.run_polling()
 
