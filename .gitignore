@@ -1,12 +1,21 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-.cache.sqlite
-.consumption_model.pkl
+# Secrets
+.env
 
-# Virtual environments
-.venv
+# Python virtual environment
+.venv/
+
+# Bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# uv lock (optional to commit, but fine to ignore locally)
+# uv.lock
+
+# DB files (will matter from Phase 5)
+*.db
+*.sqlite3
+
+# Editor
+.vscode/
+.idea/
