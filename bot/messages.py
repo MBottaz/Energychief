@@ -54,4 +54,15 @@ SETUP_CONFIRM = (
     "_You can run /setup again at any time to update these._"
 )
 
+SETUP_INVALID_ELECTRICITY_RATE = (
+    "⚠️ That doesn't look right.\n"
+    "Please enter a *positive number* for the electricity rate in €/kWh.\n"
+    "Example: `0.25`"
+)
+
+SETUP_INVALID_GAS_RATE = (
+    "⚠️ That doesn't look right.\n"
+    "Please enter a *positive number* for the gas rate in €/Sm³.\n"
+    "Example: `0.95`"
+)
 SETUP_CANCELLED = "❌ Setup cancelled. Run /setup whenever you're ready."

@@ -56,19 +56,37 @@ async def received_heating(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     )
     return ASK_ELECTRICITY_RATE
 
-
 async def received_electricity_rate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores electricity rate, asks for gas rate."""
-    context.user_data["electricity_rate"] = update.message.text
-    await update.message.reply_text(messages.SETUP_ASK_GAS_RATE)
+    """Validates and stores electricity rate, or loops back on bad input."""
+    from bot.validators import parse_positive_float
+
+    value = parse_positive_float(update.message.text)
+    if value is None:
+        await update.message.reply_text(
+            messages.SETUP_INVALID_ELECTRICITY_RATE,
+            parse_mode="Markdown",
+        )
+        return ASK_ELECTRICITY_RATE  # same state → bot asks again
+
+    context.user_data["electricity_rate"] = value
+    await update.message.reply_text(messages.SETUP_ASK_GAS_RATE, parse_mode="Markdown")
     return ASK_GAS_RATE
 
 
 async def received_gas_rate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Stores gas rate, ends conversation and confirms."""
-    context.user_data["gas_rate"] = update.message.text
+    """Validates and stores gas rate, or loops back on bad input."""
+    from bot.validators import parse_positive_float
 
-    # Summarise what we collected
+    value = parse_positive_float(update.message.text)
+    if value is None:
+        await update.message.reply_text(
+            messages.SETUP_INVALID_GAS_RATE,
+            parse_mode="Markdown",
+        )
+        return ASK_GAS_RATE  # same state → bot asks again
+
+    context.user_data["gas_rate"] = value
+
     summary = messages.SETUP_CONFIRM.format(
         heating=context.user_data["heating"],
         electricity_rate=context.user_data["electricity_rate"],
