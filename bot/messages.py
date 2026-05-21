@@ -24,13 +24,11 @@ HELP = (
 
 STATUS = (
     "✅ *Bot Status*\n\n"
-    "• Bot: {bot_name} — running\n"
-    "• Database: not connected yet _(Phase 5)_\n"
+    "{db_status}\n\n"
     "• Weather API: not connected yet _(Phase 6)_\n"
     "• Enode API: not connected yet _(Phase 7)_\n"
     "• Energy model: not loaded yet _(Phase 8)_"
 )
-
 SETUP_ASK_HEATING = (
     "⚙️ Let's set up your energy profile.\n\n"
     "What heating system do you have?"

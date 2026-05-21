@@ -8,6 +8,7 @@ from telegram.ext import (
 )
 
 from config import TELEGRAM_TOKEN
+from bot.database import init_db
 from bot.handlers import (
     start,
     help_command,
@@ -24,12 +25,6 @@ from bot.handlers import (
 
 
 def build_setup_conversation() -> ConversationHandler:
-    """
-    Builds and returns the /setup ConversationHandler.
-    Extracted into its own function so main() stays readable,
-    and so Phase 9 can call this from a factory that builds
-    different bot instances.
-    """
     return ConversationHandler(
         entry_points=[CommandHandler("setup", setup_start)],
         states={
@@ -48,14 +43,15 @@ def build_setup_conversation() -> ConversationHandler:
 
 
 def main() -> None:
+    # Initialise DB (creates tables if they don't exist)
+    init_db()
+    print("Database ready.")
+
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    # Static commands
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("status", status))
-
-    # Conversational flows
     app.add_handler(build_setup_conversation())
 
     print("Bot is running... Press Ctrl+C to stop.")
