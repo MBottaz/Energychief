@@ -4,7 +4,7 @@ from telegram.ext import ContextTypes, ConversationHandler
 
 from bot import messages
 from bot.validators import parse_positive_float
-from bot.database import upsert_user, get_user
+from bot.database import upsert_user_by_telegram, get_user_by_telegram_id
 
 ASK_HEATING, ASK_ELECTRICITY_RATE, ASK_GAS_RATE = range(3)
 
@@ -24,7 +24,7 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
 
 async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user = update.effective_user
-    row = get_user(user.id)
+    row = get_user_by_telegram_id(user.id)
 
     if row:
         db_status = (
@@ -81,7 +81,7 @@ async def received_gas_rate(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user = update.effective_user
 
     # Persist to database
-    upsert_user(
+    upsert_user_by_telegram(
         telegram_id=user.id,
         first_name=user.first_name,
         heating=context.user_data["heating"],

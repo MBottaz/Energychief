@@ -1,4 +1,3 @@
-# bot/database.py
 import sqlite3
 import pathlib
 from config import DB_PATH
@@ -25,19 +24,20 @@ def init_db(db_path: pathlib.Path = DB_PATH) -> None:
     with get_connection(db_path) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
-                telegram_id    INTEGER PRIMARY KEY,
-                first_name     TEXT,
-                heating        TEXT,
+                user_id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                telegram_id     INTEGER UNIQUE,
+                first_name      TEXT,
+                heating         TEXT,
                 electricity_rate REAL,
-                gas_rate       REAL,
-                created_at     TEXT DEFAULT (datetime('now')),
-                updated_at     TEXT DEFAULT (datetime('now'))
+                gas_rate        REAL,
+                created_at      TEXT DEFAULT (datetime('now')),
+                updated_at      TEXT DEFAULT (datetime('now'))
             )
         """)
         conn.commit()
 
 
-def upsert_user(
+def upsert_user_by_telegram(
     telegram_id: int,
     first_name: str,
     heating: str,
@@ -47,7 +47,6 @@ def upsert_user(
 ) -> None:
     """
     Inserts a new user row or updates it if telegram_id already exists.
-    INSERT OR REPLACE handles both cases atomically.
     """
     with get_connection(db_path) as conn:
         conn.execute("""
@@ -63,7 +62,7 @@ def upsert_user(
         conn.commit()
 
 
-def get_user(
+def get_user_by_telegram_id(
     telegram_id: int,
     db_path: pathlib.Path = DB_PATH,
 ) -> sqlite3.Row | None:
@@ -73,4 +72,17 @@ def get_user(
     with get_connection(db_path) as conn:
         return conn.execute(
             "SELECT * FROM users WHERE telegram_id = ?", (telegram_id,)
+        ).fetchone()
+
+
+def get_user_by_user_id(
+    user_id: int,
+    db_path: pathlib.Path = DB_PATH,
+) -> sqlite3.Row | None:
+    """
+    Returns the user row for user_id, or None if not found.
+    """
+    with get_connection(db_path) as conn:
+        return conn.execute(
+            "SELECT * FROM users WHERE user_id = ?", (user_id,)
         ).fetchone()
