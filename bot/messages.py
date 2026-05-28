@@ -48,8 +48,18 @@ SETUP_CONFIRM = (
     "✅ *Setup saved!*\n\n"
     "• Heating system: {heating}\n"
     "• Electricity rate: {electricity_rate} €/kWh\n"
-    "• Gas rate: {gas_rate} €/Sm³\n\n"
+    "• Gas rate: {gas_rate} €/Sm³\n"
+    "• REC: {rec_name}\n\n"
     "_You can run /setup again at any time to update these._"
+)
+
+SETUP_ASK_REC = (
+    "🏘️ In which REC are you a member?\n"
+    "Please enter the **number** or the **name** of the community from the list below:"
+)
+
+SETUP_REC_NOT_FOUND = (
+    "⚠️ REC not found. Please enter a valid name or number from the list."
 )
 
 SETUP_INVALID_ELECTRICITY_RATE = (
