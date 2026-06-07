@@ -1,8 +1,5 @@
-# bot/messages.py
-
-# All user-facing strings live here.
-# In Phase 9 (multi-tenant), each CER instance will have its own
-# version of this file — same keys, different text/branding.
+# frontend/messages.py — User-facing strings.
+# All UI text lives here for easy customisation.
 
 BOT_NAME = "Energychief"
 
@@ -24,10 +21,7 @@ HELP = (
 
 STATUS = (
     "✅ *Bot Status*\n\n"
-    "{db_status}\n\n"
-    "• Weather API: not connected yet _(Phase 6)_\n"
-    "• Enode API: not connected yet _(Phase 7)_\n"
-    "• Energy model: not loaded yet _(Phase 8)_"
+    "{db_status}"
 )
 SETUP_ASK_HEATING = (
     "⚙️ Let's set up your energy profile.\n\n"
@@ -74,3 +68,4 @@ SETUP_INVALID_GAS_RATE = (
     "Example: `0.95`"
 )
 SETUP_CANCELLED = "❌ Setup cancelled. Run /setup whenever you're ready."
+
