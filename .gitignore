@@ -9,9 +9,6 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Lock file needed for reproducible Docker builds
-uv.lock
-
 # DB files (will matter from Phase 5)
 *.db
 *.sqlite3
