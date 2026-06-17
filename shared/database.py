@@ -6,6 +6,7 @@ original sqlite3 interface so callers need minimal changes.
 """
 
 import csv
+import math
 import os
 import pathlib
 
@@ -160,6 +161,7 @@ def upsert_meter(
     owner_user_id: int | None,
     producer: str | None = None,
     model: str | None = None,
+    site_name: str | None = None,
 ) -> None:
     with SessionLocal() as session:
         meter = session.query(Meter).filter_by(meter_id=meter_id).first()
@@ -170,15 +172,43 @@ def upsert_meter(
                 meter.producer = producer
             if model is not None:
                 meter.model = model
+            if site_name is not None:
+                meter.site_name = site_name
         else:
             meter = Meter(
                 meter_id=meter_id,
                 owner_user_id=owner_user_id,
                 producer=producer,
                 model=model,
+                site_name=site_name,
             )
             session.add(meter)
         session.commit()
+
+
+def get_meters_for_user(user_id: int) -> list[Meter]:
+    """Returns all meters owned by the given user."""
+    with SessionLocal() as session:
+        return session.query(Meter).filter_by(owner_user_id=user_id).all()
+
+
+def get_latest_reading_for_meter(meter_id: str) -> EnergyReading | None:
+    """
+    Returns the most recent reading with a valid (non-NaN) power value.
+    Skips readings where power_kw is NaN or None.
+    """
+    with SessionLocal() as session:
+        readings = (
+            session.query(EnergyReading)
+            .filter_by(meter_id=meter_id)
+            .order_by(EnergyReading.timestamp.desc())
+            .limit(20)
+            .all()
+        )
+        for r in readings:
+            if r.power_kw is not None and not math.isnan(r.power_kw):
+                return r
+        return None
 
 
 def save_energy_reading(meter_id: str, timestamp: str, power_kw: float) -> None:

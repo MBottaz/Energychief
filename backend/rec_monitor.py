@@ -1,6 +1,8 @@
 from backend.enode_api import get_all_meters
 from shared.database import save_energy_reading, upsert_meter
 
+
+
 async def collect_and_store_readings() -> None:
     """
     Fetches all meters from Enode and saves the latest energyState 
@@ -27,6 +29,7 @@ async def collect_and_store_readings() -> None:
                     owner_user_id=owner_user_id,
                     producer=info.get("brand"),
                     model=info.get("model"),
+                    site_name=info.get("siteName"),
                 )
 
                 save_energy_reading(meter_id, timestamp, power_kw)

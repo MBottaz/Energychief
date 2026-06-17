@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from frontend import messages
-from shared.database import get_user_by_telegram_id
+from shared.database import get_user_by_telegram_id, get_meters_for_user
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -23,11 +23,18 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     row = get_user_by_telegram_id(user.id)
 
     if row:
+        meters = get_meters_for_user(row.user_id)
+        if meters:
+            meter_info = f"• Contatori collegati: {len(meters)}"
+        else:
+            meter_info = "• Contatori collegati: nessuno — usa /collegacontatore"
+
         db_status = (
             f"• User profile: ✅ found\n"
             f"  – Heating: {row.heating}\n"
             f"  – Electricity: {row.electricity_rate} €/kWh\n"
-            f"  – Gas: {row.gas_rate} €/Sm³"
+            f"  – Gas: {row.gas_rate} €/Sm³\n"
+            f"{meter_info}"
         )
     else:
         db_status = "• User profile: ❌ not set up yet — run /setup"

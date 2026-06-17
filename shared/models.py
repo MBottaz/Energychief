@@ -61,6 +61,7 @@ class Meter(Base):
     owner_user_id       = Column(Integer, ForeignKey("users.user_id"), nullable=True)
     producer            = Column(String, nullable=True)
     model               = Column(String, nullable=True)
+    site_name           = Column(String, nullable=True)
     consumption_enabled = Column(Integer, default=1)
     production_enabled  = Column(Integer, default=1)
     linked_at           = Column(String, default=_utcnow)

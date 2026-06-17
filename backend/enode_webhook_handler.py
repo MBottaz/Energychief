@@ -67,6 +67,7 @@ async def process_enode_event(event: dict, delivery_id: str | None) -> None:
                 owner_user_id=owner_user_id,
                 producer=info.get("brand"),
                 model=info.get("model"),
+                site_name=info.get("siteName"),
             )
             # Save reading
             save_energy_reading(meter_id, timestamp, power_kw)

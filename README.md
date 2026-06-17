@@ -71,13 +71,15 @@ Energychief/
 │       ├── __init__.py
 │       ├── general.py               # /start, /help, /status commands
 │       ├── setup.py                 # /setup conversation handler (multi-step)
-│       └── enode.py                 # /collegacontatore, /energia commands
+│       ├── enode.py                 # /collegacontatore command (Enode link session)
+│       └── rec.py                   # /energia command (local DB readings)
 │
 ├── alembic/
 │   ├── env.py                       # Alembic environment (reads DATABASE_URL from env)
 │   ├── script.py.mako               # Migration template
 │   └── versions/
-│       └── bb84e8355ce8_initial_schema.py  # Initial schema migration
+│       ├── bb84e8355ce8_initial_schema.py  # Initial schema migration
+│       └── 7adadfca625d_add_site_name_to_meters.py  # Add site_name to meters
 │
 └── docs/
     └── Enode_webhook.md             # Enode webhook documentation reference
@@ -127,7 +129,7 @@ Five tables defined as SQLAlchemy `DeclarativeBase` subclasses:
 |---|---|---|
 | **Rec** | `recs` | `rec_id`, `name` (unique), `latitude`, `longitude`, `pod_prefix` |
 | **User** | `users` | `user_id` (PK), `telegram_id` (unique), `first_name`, `heating`, `electricity_rate`, `gas_rate`, `rec_id` (FK), `threshold_kwh`, `notification_interval_hours`, `last_notified_at` |
-| **Meter** | `meters` | `meter_id` (PK), `owner_user_id` (FK), `producer`, `model`, `consumption_enabled`, `production_enabled` |
+| **Meter** | `meters` | `meter_id` (PK), `owner_user_id` (FK), `producer`, `model`, `site_name`, `consumption_enabled`, `production_enabled` |
 | **EnergyReading** | `energy_readings` | Compound PK (`meter_id`, `timestamp`), `power_kw` |
 | **WebhookEvent** | `webhook_events` | `id`, `delivery_id`, `event_type`, `meter_id`, `payload`, `received_at` |
 
@@ -148,8 +150,10 @@ All database operations in one module. Key functions:
 - `get_meters_for_rec(rec_id)` — Get meter IDs for all users in a REC
 
 **Meters & Readings:**
-- `upsert_meter(meter_id, owner_user_id, producer, model)` — Create or update a meter
+- `upsert_meter(meter_id, owner_user_id, producer, model, site_name)` — Create or update a meter
 - `save_energy_reading(meter_id, timestamp, power_kw)` — Store a reading (upsert by compound key)
+- `get_meters_for_user(user_id)` — Get all meters owned by a user
+- `get_latest_reading_for_meter(meter_id)` — Most recent reading with a valid (non-NaN) power value
 - `get_latest_power_per_meter(rec_id)` — Latest reading per meter for a REC
 
 **Webhook Logging:**
@@ -220,7 +224,7 @@ Builds a `telegram.ext.Application` with:
 | `/status` | `general.status` | Show current configuration |
 | `/setup` | `setup.setup_start` | Multi-step profile configuration |
 | `/collegacontatore` | `enode.handle_link_meter` | Get Enode link to connect a smart meter |
-| `/energia` | `enode.handle_energy` | Show real-time energy consumption/production |
+| `/energia` | `rec.handle_energy` | Show latest energy consumption/production from local database |
 | `/cancel` | `setup.setup_cancel` | Cancel ongoing setup |
 
 **Background Job:**
@@ -238,7 +242,7 @@ All Italian user-facing messages in one file for easy customisation.
 
 - `start()` — Welcome with bot name
 - `help_command()` — Lists all commands
-- `status()` — Shows user's saved profile from database
+- `status()` — Shows user's saved profile and linked meters from database
 
 ### `frontend/handlers/setup.py` — Setup Conversation
 
@@ -253,7 +257,10 @@ On completion, calls `upsert_user_by_telegram()` to persist the profile.
 ### `frontend/handlers/enode.py` — Enode Meter Commands
 
 - `handle_link_meter()` — Creates an Enode link session and sends the URL to the user
-- `handle_energy()` — Fetches all linked meters from Enode, displays consumption and production (inverts sign: Enode's `power` = net flow where positive = consumed; the bot displays it as positive = production)
+
+### `frontend/handlers/rec.py` — REC Energy Data Handler
+
+- `handle_energy()` — Reads latest energy readings from the local `energy_readings` database (no Enode API calls). Displays consumption and production per meter using the most recent valid reading. If a reading has `NaN` power, it skips to the previous valid reading. Shows `site_name` when available, and the last-updated timestamp.
 
 ---
 
@@ -391,6 +398,7 @@ meters
 ├── owner_user_id       INTEGER FK → users.user_id
 ├── producer            TEXT
 ├── model               TEXT
+├── site_name           TEXT
 ├── consumption_enabled INTEGER DEFAULT 1
 ├── production_enabled  INTEGER DEFAULT 1
 └── linked_at           TEXT

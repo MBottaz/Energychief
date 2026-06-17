@@ -36,7 +36,8 @@ from frontend.handlers.setup import (
     ASK_GAS_RATE,
     ASK_REC,
 )
-from frontend.handlers.enode import handle_link_meter, handle_energy
+from frontend.handlers.enode import handle_link_meter
+from frontend.handlers.rec import handle_energy
 
 
 async def check_recs_and_notify(context) -> None:
