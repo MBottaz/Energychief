@@ -31,9 +31,6 @@ async def status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         db_status = (
             f"• User profile: ✅ found\n"
-            f"  – Heating: {row.heating}\n"
-            f"  – Electricity: {row.electricity_rate} €/kWh\n"
-            f"  – Gas: {row.gas_rate} €/Sm³\n"
             f"{meter_info}"
         )
     else:

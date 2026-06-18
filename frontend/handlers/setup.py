@@ -1,55 +1,33 @@
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, ConversationHandler
 
 from frontend import messages
-from frontend.validators import parse_positive_float
-from shared.database import upsert_user_by_telegram, get_all_recs
+from shared.database import (
+    upsert_user_by_telegram,
+    get_all_recs,
+    upsert_meter,
+)
 
-ASK_HEATING, ASK_ELECTRICITY_RATE, ASK_GAS_RATE, ASK_REC = range(4)
+ASK_POD, ASK_REC = range(2)
 
 
 async def setup_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    keyboard = [["Heat pump"], ["Gas boiler"], ["Both"]]
-    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True, resize_keyboard=True)
-    await update.message.reply_text(messages.SETUP_ASK_HEATING, reply_markup=reply_markup)
-    return ASK_HEATING
+    await update.message.reply_text(messages.SETUP_ASK_POD, parse_mode="Markdown")
+    return ASK_POD
 
 
-async def received_heating(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    context.user_data["heating"] = update.message.text
-    await update.message.reply_text(
-        messages.SETUP_ASK_ELECTRICITY_RATE,
-        reply_markup=ReplyKeyboardRemove(),
-        parse_mode="Markdown",
-    )
-    return ASK_ELECTRICITY_RATE
+async def received_pod(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    pod = update.message.text.strip()
+    if not pod:
+        await update.message.reply_text("⚠️ Inserisci un POD valido.")
+        return ASK_POD
 
+    context.user_data["pod"] = pod
 
-async def received_electricity_rate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    value = parse_positive_float(update.message.text)
-    if value is None:
-        await update.message.reply_text(
-            messages.SETUP_INVALID_ELECTRICITY_RATE, parse_mode="Markdown"
-        )
-        return ASK_ELECTRICITY_RATE
-    context.user_data["electricity_rate"] = value
-    await update.message.reply_text(messages.SETUP_ASK_GAS_RATE, parse_mode="Markdown")
-    return ASK_GAS_RATE
-
-
-async def received_gas_rate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    value = parse_positive_float(update.message.text)
-    if value is None:
-        await update.message.reply_text(
-            messages.SETUP_INVALID_GAS_RATE, parse_mode="Markdown"
-        )
-        return ASK_GAS_RATE
-    context.user_data["gas_rate"] = value
-
-    # Fetch RECs to show them to the user
+    # Show REC selection list
     recs = get_all_recs()
     if not recs:
-        await update.message.reply_text("⚠️ No RECs found in the system. Please contact an administrator.")
+        await update.message.reply_text("⚠️ Nessuna REC trovata nel sistema. Contatta un amministratore.")
         return ConversationHandler.END
 
     rec_options = []
@@ -90,25 +68,23 @@ async def received_rec(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         await update.message.reply_text(messages.SETUP_REC_NOT_FOUND, parse_mode="Markdown")
         return ASK_REC
 
-    context.user_data["rec_id"] = selected_rec_id
-    context.user_data["rec_name"] = selected_rec_name
     user = update.effective_user
 
-    # Persist to database
-    upsert_user_by_telegram(
+    # Create/update the user in the database
+    db_user = upsert_user_by_telegram(
         telegram_id=user.id,
         first_name=user.first_name,
-        heating=context.user_data["heating"],
-        electricity_rate=context.user_data["electricity_rate"],
-        gas_rate=context.user_data["gas_rate"],
         rec_id=selected_rec_id,
     )
 
+    # Store the POD as a meter linked to this user
+    pod = context.user_data.get("pod", "")
+    if pod:
+        upsert_meter(meter_id=pod, owner_user_id=db_user.user_id)
+
     summary = messages.SETUP_CONFIRM.format(
-        heating=context.user_data["heating"],
-        electricity_rate=context.user_data["electricity_rate"],
-        gas_rate=context.user_data["gas_rate"],
-        rec_name=selected_rec_name
+        pod=pod,
+        rec_name=selected_rec_name,
     )
     await update.message.reply_text(summary, parse_mode="Markdown")
     return ConversationHandler.END

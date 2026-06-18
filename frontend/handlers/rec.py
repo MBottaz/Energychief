@@ -37,11 +37,11 @@ async def handle_energy(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         if reading:
             signed_power = -reading.power_kw
             if signed_power > 0:
-                cons, prod = "0 W", f"{signed_power:.0f} W"
+                cons, prod = "0 kW", f"{signed_power:.0f} kW"
             elif signed_power < 0:
-                cons, prod = f"{abs(signed_power):.0f} W", "0 W"
+                cons, prod = f"{abs(signed_power):.0f} kW", "0 kW"
             else:
-                cons = prod = "0 W"
+                cons = prod = "0 kW"
             updated = reading.timestamp
         else:
             cons = prod = "N/A"

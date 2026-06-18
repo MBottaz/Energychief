@@ -26,14 +26,10 @@ from shared.database import (
 from frontend.handlers.general import start, help_command, status
 from frontend.handlers.setup import (
     setup_start,
-    received_heating,
-    received_electricity_rate,
-    received_gas_rate,
+    received_pod,
     received_rec,
     setup_cancel,
-    ASK_HEATING,
-    ASK_ELECTRICITY_RATE,
-    ASK_GAS_RATE,
+    ASK_POD,
     ASK_REC,
 )
 from frontend.handlers.enode import handle_link_meter
@@ -102,14 +98,8 @@ def _build_setup_conversation() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[CommandHandler("setup", setup_start)],
         states={
-            ASK_HEATING: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, received_heating)
-            ],
-            ASK_ELECTRICITY_RATE: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, received_electricity_rate)
-            ],
-            ASK_GAS_RATE: [
-                MessageHandler(filters.TEXT & ~filters.COMMAND, received_gas_rate)
+            ASK_POD: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, received_pod)
             ],
             ASK_REC: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, received_rec)

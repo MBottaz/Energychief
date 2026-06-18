@@ -23,31 +23,26 @@ from shared.models import Rec, User, Meter, EnergyReading, WebhookEvent
 def upsert_user_by_telegram(
     telegram_id: int,
     first_name: str,
-    heating: str,
-    electricity_rate: float,
-    gas_rate: float,
     rec_id: int | None = None,
-) -> None:
+) -> User:
+    """Create or update a user. Returns the User instance."""
     with SessionLocal() as session:
         user = session.query(User).filter_by(telegram_id=telegram_id).first()
         if user:
             user.first_name = first_name
-            user.heating = heating
-            user.electricity_rate = electricity_rate
-            user.gas_rate = gas_rate
             if rec_id is not None:
                 user.rec_id = rec_id
         else:
             user = User(
                 telegram_id=telegram_id,
                 first_name=first_name,
-                heating=heating,
-                electricity_rate=electricity_rate,
-                gas_rate=gas_rate,
                 rec_id=rec_id,
             )
             session.add(user)
         session.commit()
+        # Refresh to get generated fields (user_id, etc.)
+        session.refresh(user)
+        return user
 
 
 def get_user_by_telegram_id(telegram_id: int) -> User | None:

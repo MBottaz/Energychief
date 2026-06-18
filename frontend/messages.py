@@ -11,61 +11,39 @@ START = (
 )
 
 HELP = (
-    "🤖 *{bot_name} — Available Commands*\n\n"
-    "/start — Welcome message\n"
-    "/help — Show this help\n"
-    "/status — Current bot status\n"
-    "/setup — Configure your energy profile\n\n"
-    "_More commands will be added as the bot grows._"
+    "🤖 *{bot_name} — Comandi Disponibili*\n\n"
+    "/start — Messaggio di benvenuto\n"
+    "/help — Mostra questo aiuto\n"
+    "/status — Stato del bot e del tuo profilo\n"
+    "/setup — Configura il tuo profilo energetico\n"
+    "/collegacontatore — Collega il tuo contatore Enode\n"
+    "/energia — Mostra i dati energetici dei tuoi contatori"
 )
 
 STATUS = (
     "✅ *Bot Status*\n\n"
     "{db_status}"
 )
-SETUP_ASK_HEATING = (
-    "⚙️ Let's set up your energy profile.\n\n"
-    "What heating system do you have?"
-)
-
-SETUP_ASK_ELECTRICITY_RATE = (
-    "💡 What is your current electricity rate?\n"
-    "Enter the price in *€/kWh* (e.g. `0.25`)"
-)
-
-SETUP_ASK_GAS_RATE = (
-    "🔥 What is your current gas rate?\n"
-    "Enter the price in *€/Sm³* (e.g. `0.95`)"
+SETUP_ASK_POD = (
+    "⚙️ Configuriamo il tuo profilo energetico.\n\n"
+    "Inserisci il tuo **POD** (il codice del punto di prelievo, es. `AC001E00696`):"
 )
 
 SETUP_CONFIRM = (
-    "✅ *Setup saved!*\n\n"
-    "• Heating system: {heating}\n"
-    "• Electricity rate: {electricity_rate} €/kWh\n"
-    "• Gas rate: {gas_rate} €/Sm³\n"
+    "✅ *Setup salvato!*\n\n"
+    "• POD: {pod}\n"
     "• REC: {rec_name}\n\n"
-    "_You can run /setup again at any time to update these._"
+    "_Puoi eseguire /setup di nuovo per aggiornare questi dati._"
 )
 
 SETUP_ASK_REC = (
-    "🏘️ In which REC are you a member?\n"
-    "Please enter the **number** or the **name** of the community from the list below:"
+    "🏘️ In quale REC sei membro?\n"
+    "Inserisci il **numero** o il **nome** della comunità dalla lista:"
 )
 
 SETUP_REC_NOT_FOUND = (
-    "⚠️ REC not found. Please enter a valid name or number from the list."
+    "⚠️ REC non trovato. Inserisci un nome o numero valido dalla lista."
 )
 
-SETUP_INVALID_ELECTRICITY_RATE = (
-    "⚠️ That doesn't look right.\n"
-    "Please enter a *positive number* for the electricity rate in €/kWh.\n"
-    "Example: `0.25`"
-)
-
-SETUP_INVALID_GAS_RATE = (
-    "⚠️ That doesn't look right.\n"
-    "Please enter a *positive number* for the gas rate in €/Sm³.\n"
-    "Example: `0.95`"
-)
-SETUP_CANCELLED = "❌ Setup cancelled. Run /setup whenever you're ready."
+SETUP_CANCELLED = "❌ Setup annullato. Usa /setup quando sei pronto."
 
