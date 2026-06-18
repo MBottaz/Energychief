@@ -4,10 +4,10 @@
 BOT_NAME = "Energychief"
 
 START = (
-    "👋 Hello {first_name}! I'm {bot_name}.\n\n"
-    "I help you decide whether it's more convenient to heat with your "
-    "heat pump or your gas boiler, based on real-time energy prices and weather.\n\n"
-    "Type /help to see all available commands."
+    "👋 Ciao {first_name}! Sono {bot_name}.\n\n"
+    "ti aiutero a capire come quando nella tua comunita energetica c'e energia disponibile. "
+    "Puoi risparmiare fino a meta del costo dell'energia!\n\n"
+    "Digira /help to see all available commands."
 )
 
 HELP = (
@@ -26,7 +26,7 @@ STATUS = (
 )
 SETUP_ASK_POD = (
     "⚙️ Configuriamo il tuo profilo energetico.\n\n"
-    "Inserisci il tuo **POD** (il codice del punto di prelievo, es. `AC001E00696`):"
+    "Inserisci il tuo **POD** (il codice del punto di prelievo, es. `IT001E1234567`):"
 )
 
 SETUP_CONFIRM = (
