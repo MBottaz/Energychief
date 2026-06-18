@@ -2,11 +2,7 @@ from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, ConversationHandler
 
 from frontend import messages
-from shared.database import (
-    upsert_user_by_telegram,
-    get_all_recs,
-    upsert_meter,
-)
+from shared.database import upsert_user_by_telegram, get_all_recs
 
 ASK_POD, ASK_REC = range(2)
 
@@ -70,17 +66,14 @@ async def received_rec(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
     user = update.effective_user
 
-    # Create/update the user in the database
-    db_user = upsert_user_by_telegram(
+    # Create/update the user with POD and REC
+    pod = context.user_data.get("pod", "")
+    upsert_user_by_telegram(
         telegram_id=user.id,
         first_name=user.first_name,
         rec_id=selected_rec_id,
+        pod=pod if pod else None,
     )
-
-    # Store the POD as a meter linked to this user
-    pod = context.user_data.get("pod", "")
-    if pod:
-        upsert_meter(meter_id=pod, owner_user_id=db_user.user_id)
 
     summary = messages.SETUP_CONFIRM.format(
         pod=pod,

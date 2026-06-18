@@ -17,6 +17,8 @@ from fastapi import FastAPI, Request, Response
 from telegram import Update
 
 from shared.config import WEBHOOK_BASE_URL, ENODE_WEBHOOK_SECRET
+from shared.engine import engine
+from shared.models import Base
 from shared.database import seed_recs_from_csv
 from backend.rec_monitor import collect_and_store_readings
 from backend.enode_webhook_handler import verify_enode_signature, process_enode_event
@@ -26,8 +28,7 @@ from frontend.telegram_app import build_telegram_app
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # ── STARTUP ──
-    from shared.engine import engine
-    from shared.models import Base
+    Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
 
     seeded = seed_recs_from_csv("recs_data.csv")

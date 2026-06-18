@@ -9,11 +9,7 @@ import hmac
 import json
 
 from shared.config import ENODE_WEBHOOK_SECRET
-from shared.database import (
-    log_webhook_event,
-    save_energy_reading,
-    upsert_meter,
-)
+from shared.database import save_meter_reading
 
 
 def verify_enode_signature(payload: bytes, signature_header: str) -> bool:
@@ -58,19 +54,21 @@ async def process_enode_event(event: dict, delivery_id: str | None) -> None:
         timestamp = energy.get("lastUpdated") or event.get("createdAt")
 
         if meter_id and power_kw is not None and timestamp:
-            # Upsert meter record
             user_id_str = event.get("userId")
             owner_user_id = int(user_id_str) if user_id_str and user_id_str.isdigit() else None
             info = event.get("information") or {}
-            upsert_meter(
+            save_meter_reading(
                 meter_id=meter_id,
                 owner_user_id=owner_user_id,
+                power_kw=power_kw,
+                timestamp=timestamp,
                 producer=info.get("brand"),
                 model=info.get("model"),
                 site_name=info.get("siteName"),
+                delivery_id=delivery_id,
+                event_type=event_type,
+                raw_payload=json.dumps(event, default=str),
             )
-            # Save reading
-            save_energy_reading(meter_id, timestamp, power_kw)
             print(f"Webhook: saved reading for meter {meter_id} ({power_kw} kW at {timestamp})")
         elif meter_id:
             print(f"Webhook: incomplete data for meter {meter_id}: power={power_kw}, ts={timestamp}")
@@ -83,11 +81,3 @@ async def process_enode_event(event: dict, delivery_id: str | None) -> None:
 
     else:
         print(f"Webhook: unknown event type '{event_type}' for meter {meter_id}")
-
-    # Log raw payload for debugging
-    log_webhook_event(
-        delivery_id=delivery_id,
-        event_type=event_type,
-        meter_id=meter_id,
-        payload=json.dumps(event, default=str),
-    )

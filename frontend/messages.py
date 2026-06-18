@@ -33,6 +33,7 @@ SETUP_CONFIRM = (
     "✅ *Setup salvato!*\n\n"
     "• POD: {pod}\n"
     "• REC: {rec_name}\n\n"
+    "Ora collega il tuo contatore con /collegacontatore.\n"
     "_Puoi eseguire /setup di nuovo per aggiornare questi dati._"
 )
 
