@@ -13,20 +13,21 @@ def _resolve_enode_user_id(telegram_id: int) -> str | None:
 
 
 async def handle_link_meter(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    enode_user_id = _resolve_enode_user_id(update.effective_user.id)
-    if enode_user_id is None:
-        await update.message.reply_text(
-            "Non sei ancora registrato. Usa /start per cominciare."
-        )
-        return
-
     try:
+        enode_user_id = _resolve_enode_user_id(update.effective_user.id)
+        if enode_user_id is None:
+            await update.message.reply_text(
+                "Non sei ancora registrato. Usa /start per cominciare."
+            )
+            return
+
         link_url = await create_link_session(enode_user_id)
         await update.message.reply_text(
             f"Clicca qui per collegare il tuo contatore:\n{link_url}\n\n"
             "Una volta completato, torna qui e usa /energia per vedere i dati."
         )
     except Exception as e:
+        print(f"[collegacontatore] Error for user {update.effective_user.id}: {e}")
         await update.message.reply_text(f"Errore durante la creazione del link: {e}")
 
 
