@@ -42,6 +42,16 @@ SETUP_ASK_REC = (
     "Inserisci il **numero** o il **nome** della comunità dalla lista:"
 )
 
+SETUP_POD_GSE_ERROR = (
+    "❌ POD non trovato o cabina primaria non disponibile.\n"
+    "Verifica il codice e riprova, oppure usa /cancel per annullare."
+)
+
+SETUP_NO_REC_FOR_CABINA = (
+    "⚠️ Nessuna REC trovata per la tua cabina primaria.\n"
+    "Contatta un amministratore per verificare la copertura."
+)
+
 SETUP_REC_NOT_FOUND = (
     "⚠️ REC non trovato. Inserisci un nome o numero valido dalla lista."
 )

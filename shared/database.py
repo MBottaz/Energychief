@@ -12,7 +12,7 @@ import pathlib
 
 from sqlalchemy import text
 from shared.engine import SessionLocal
-from shared.models import Rec, User, Meter, EnergyReading, WebhookEvent
+from shared.models import Rec, RecCabina, User, Meter, EnergyReading, WebhookEvent
 
 
 # ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -69,11 +69,18 @@ def update_last_notified(telegram_id: int) -> None:
 
 
 def seed_recs_from_csv(csv_path: str) -> int:
+    """Seed RECs and their cabine primarie from a CSV file.
+
+    The CSV may contain multiple rows for the same REC (same name) 
+    to associate it with multiple cabine primarie. Each row's 
+    pod_prefix is added as a cabina_code in rec_cabine.
+    """
     if not os.path.exists(csv_path):
         print(f"Warning: Seed file {csv_path} not found.")
         return 0
 
-    new_count = 0
+    new_recs = 0
+    new_cabine = 0
     with SessionLocal() as session:
         with open(csv_path, mode="r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
@@ -83,22 +90,44 @@ def seed_recs_from_csv(csv_path: str) -> int:
                 lat = float(lat_str) if lat_str else None
                 lon = float(lon_str) if lon_str else None
                 name = row["name"].strip()
-                pod_prefix = row.get("pod_prefix", "").strip()
+                cabina_code = row.get("pod_prefix", "").strip()
 
-                existing = session.query(Rec).filter_by(name=name).first()
-                if existing:
-                    continue
+                # Upsert REC by name
+                rec = session.query(Rec).filter_by(name=name).first()
+                if not rec:
+                    rec = Rec(name=name, latitude=lat, longitude=lon)
+                    session.add(rec)
+                    session.flush()  # get rec_id assigned
+                    new_recs += 1
 
-                rec = Rec(name=name, latitude=lat, longitude=lon, pod_prefix=pod_prefix)
-                session.add(rec)
-                new_count += 1
+                # Add cabina association if not already present
+                if cabina_code:
+                    exists = session.query(RecCabina).filter_by(
+                        rec_id=rec.rec_id, cabina_code=cabina_code
+                    ).first()
+                    if not exists:
+                        session.add(RecCabina(rec_id=rec.rec_id, cabina_code=cabina_code))
+                        new_cabine += 1
+
         session.commit()
-    return new_count
+    print(f"Seeded {new_recs} new RECs, {new_cabine} new cabine associations.")
+    return new_recs + new_cabine
 
 
 def get_all_recs() -> list[Rec]:
     with SessionLocal() as session:
         return session.query(Rec).all()
+
+
+def get_recs_by_cabina(cod_ac: str) -> list[Rec]:
+    """Returns RECs linked to the given cabina primaria code."""
+    with SessionLocal() as session:
+        return (
+            session.query(Rec)
+            .join(RecCabina)
+            .filter(RecCabina.cabina_code == cod_ac)
+            .all()
+        )
 
 
 def get_users_in_rec(rec_id: int) -> list[User]:

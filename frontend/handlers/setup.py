@@ -2,7 +2,8 @@ from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import ContextTypes, ConversationHandler
 
 from frontend import messages
-from shared.database import upsert_user_by_telegram, get_all_recs
+from shared.database import upsert_user_by_telegram, get_all_recs, get_recs_by_cabina
+from shared.gse_api import get_cabina_primaria
 
 ASK_POD, ASK_REC = range(2)
 
@@ -20,10 +21,19 @@ async def received_pod(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
     context.user_data["pod"] = pod
 
-    # Show REC selection list
-    recs = get_all_recs()
+    # Query GSE API for cabina primaria
+    cabina = await get_cabina_primaria(pod)
+    if cabina is None:
+        await update.message.reply_text(messages.SETUP_POD_GSE_ERROR)
+        return ASK_POD
+
+    context.user_data["cabina"] = cabina
+
+    # Filter RECs by cabina primaria
+    recs = get_recs_by_cabina(cabina)
+    context.user_data["recs"] = recs
     if not recs:
-        await update.message.reply_text("⚠️ Nessuna REC trovata nel sistema. Contatta un amministratore.")
+        await update.message.reply_text(messages.SETUP_NO_REC_FOR_CABINA)
         return ConversationHandler.END
 
     rec_options = []
@@ -40,7 +50,7 @@ async def received_pod(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
 
 async def received_rec(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_input = update.message.text.strip()
-    recs = get_all_recs()
+    recs = context.user_data.get("recs", get_all_recs())
 
     selected_rec_id = None
     selected_rec_name = ""

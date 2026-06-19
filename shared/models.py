@@ -28,10 +28,10 @@ class Rec(Base):
     name      = Column(String, nullable=False, unique=True)
     latitude  = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
-    pod_prefix = Column(String, nullable=True)
     created_at = Column(String, default=_utcnow)
 
     users = relationship("User", back_populates="rec")
+    cabine = relationship("RecCabina", back_populates="rec", cascade="all, delete-orphan", lazy="selectin")
 
 
 class User(Base):
@@ -81,6 +81,16 @@ class EnergyReading(Base):
     )
 
     meter = relationship("Meter", back_populates="readings")
+
+
+class RecCabina(Base):
+    """Many-to-many: a REC can span multiple cabine primarie."""
+    __tablename__ = "rec_cabine"
+
+    rec_id = Column(Integer, ForeignKey("recs.rec_id"), primary_key=True)
+    cabina_code = Column(String(20), primary_key=True)
+
+    rec = relationship("Rec", back_populates="cabine")
 
 
 class WebhookEvent(Base):

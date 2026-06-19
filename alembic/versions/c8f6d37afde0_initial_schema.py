@@ -1,8 +1,8 @@
-"""initial schema
+"""initial_schema
 
-Revision ID: bb84e8355ce8
+Revision ID: c8f6d37afde0
 Revises: 
-Create Date: 2026-06-07 18:31:16.294513
+Create Date: 2026-06-19 22:42:12.056297
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'bb84e8355ce8'
+revision: str = 'c8f6d37afde0'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -26,7 +26,6 @@ def upgrade() -> None:
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('latitude', sa.Float(), nullable=True),
     sa.Column('longitude', sa.Float(), nullable=True),
-    sa.Column('pod_prefix', sa.String(), nullable=True),
     sa.Column('created_at', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('rec_id'),
     sa.UniqueConstraint('name')
@@ -40,13 +39,17 @@ def upgrade() -> None:
     sa.Column('received_at', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('rec_cabine',
+    sa.Column('rec_id', sa.Integer(), nullable=False),
+    sa.Column('cabina_code', sa.String(length=20), nullable=False),
+    sa.ForeignKeyConstraint(['rec_id'], ['recs.rec_id'], ),
+    sa.PrimaryKeyConstraint('rec_id', 'cabina_code')
+    )
     op.create_table('users',
     sa.Column('user_id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('telegram_id', sa.Integer(), nullable=True),
     sa.Column('first_name', sa.String(), nullable=True),
-    sa.Column('heating', sa.String(), nullable=True),
-    sa.Column('electricity_rate', sa.Float(), nullable=True),
-    sa.Column('gas_rate', sa.Float(), nullable=True),
+    sa.Column('pod', sa.String(), nullable=True),
     sa.Column('rec_id', sa.Integer(), nullable=True),
     sa.Column('threshold_kwh', sa.Float(), nullable=True),
     sa.Column('notification_interval_hours', sa.Integer(), nullable=True),
@@ -62,6 +65,7 @@ def upgrade() -> None:
     sa.Column('owner_user_id', sa.Integer(), nullable=True),
     sa.Column('producer', sa.String(), nullable=True),
     sa.Column('model', sa.String(), nullable=True),
+    sa.Column('site_name', sa.String(), nullable=True),
     sa.Column('consumption_enabled', sa.Integer(), nullable=True),
     sa.Column('production_enabled', sa.Integer(), nullable=True),
     sa.Column('linked_at', sa.String(), nullable=True),
@@ -85,6 +89,7 @@ def downgrade() -> None:
     op.drop_table('energy_readings')
     op.drop_table('meters')
     op.drop_table('users')
+    op.drop_table('rec_cabine')
     op.drop_table('webhook_events')
     op.drop_table('recs')
     # ### end Alembic commands ###
