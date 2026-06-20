@@ -9,6 +9,12 @@ ASK_POD, ASK_REC = range(2)
 
 
 async def setup_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    # Show welcome message first (also used by /start)
+    user = update.effective_user
+    await update.message.reply_text(
+        messages.START.format(first_name=user.first_name, bot_name=messages.BOT_NAME)
+    )
+    # Then ask for POD
     await update.message.reply_text(messages.SETUP_ASK_POD, parse_mode="Markdown")
     return ASK_POD
 

@@ -73,8 +73,6 @@ def _headers(token: str) -> dict:
 async def create_link_session(user_id: str) -> str:
     """Returns a linkUrl the user must open to connect their meter."""
     token = await get_access_token()
-    from shared.config import REDIRECT_URI
-
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{ENODE_API_URL}/users/{user_id}/link",
@@ -86,7 +84,6 @@ async def create_link_session(user_id: str) -> str:
                 "vendorType": "meter",
                 "scopes": ["meter:read:data"],
                 "language": "it-IT",
-                "redirectUri": REDIRECT_URI,
             },
         )
         response.raise_for_status()

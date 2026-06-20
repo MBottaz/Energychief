@@ -5,13 +5,6 @@ from frontend import messages
 from shared.database import get_user_by_telegram_id, get_meters_for_user
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    user = update.effective_user
-    await update.message.reply_text(
-        messages.START.format(first_name=user.first_name, bot_name=messages.BOT_NAME)
-    )
-
-
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         messages.HELP.format(bot_name=messages.BOT_NAME), parse_mode="Markdown"

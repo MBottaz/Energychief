@@ -23,7 +23,7 @@ from shared.database import (
     get_users_in_rec,
     update_last_notified,
 )
-from frontend.handlers.general import start, help_command, status
+from frontend.handlers.general import help_command, status
 from frontend.handlers.setup import (
     setup_start,
     received_pod,
@@ -96,7 +96,7 @@ async def check_recs_and_notify(context) -> None:
 
 def _build_setup_conversation() -> ConversationHandler:
     return ConversationHandler(
-        entry_points=[CommandHandler("setup", setup_start)],
+        entry_points=[CommandHandler("start", setup_start), CommandHandler("setup", setup_start)],
         states={
             ASK_POD: [
                 MessageHandler(filters.TEXT & ~filters.COMMAND, received_pod)
@@ -113,7 +113,6 @@ def build_telegram_app():
     """Build and return a configured PTB Application (polling mode)."""
     app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
 
-    app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("status", status))
     app.add_handler(_build_setup_conversation())
