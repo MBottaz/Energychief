@@ -12,12 +12,12 @@ Energy Chief is a Telegram bot companion for understanding energy consumption an
 | **Enode Integration** | ✅ | OAuth2-based API client to read smart meters via Enode |
 | **REC Monitoring** | ✅ | Periodic polling and webhook-based collection of meter readings |
 | **Energy Availability Alerts** | ✅ | Automatic Telegram notifications when REC energy exceeds a threshold |
-| **User Profile Setup** | ✅ | Configure heating system, electricity/gas rates, and REC membership |
+| **User Profile Setup** | ✅ | Enter POD (meter point code) and select REC membership |
 | **Real-time Meter Data** | ✅ | View live consumption/production from linked smart meters |
 | **Webhook Support** | ✅ | Event-driven updates from Enode (near-real-time) |
 | **Dual Database** | ✅ | SQLite for local dev, PostgreSQL for production |
 | **Alembic Migrations** | ✅ | Managed schema migrations |
-| **Cost Comparison** | 🔄 Planned | Compare heat pump vs gas boiler convenience |
+| **Cost Comparison** | 🔄 Planned | Compare appliance running costs based on real-time energy availability |
 
 ---
 
@@ -69,8 +69,8 @@ Energychief/
 │   ├── validators.py                # Input validation functions
 │   └── handlers/
 │       ├── __init__.py
-│       ├── general.py               # /start, /help, /status commands
-│       ├── setup.py                 # /setup conversation handler (multi-step)
+│       ├── general.py               # /help, /status commands
+│       ├── setup.py                 # /start + /setup conversation handler (POD → REC)
 │       ├── enode.py                 # /collegacontatore command (Enode link session)
 │       └── rec.py                   # /energia command (local DB readings)
 │
@@ -115,7 +115,7 @@ Starts Uvicorn on `127.0.0.1:8000`. Used by Uberspace supervisord in production.
 
 Loads `.env` via `python-dotenv` and exposes typed constants:
 - `TELEGRAM_TOKEN`, `WEBHOOK_BASE_URL`, `ENODE_WEBHOOK_SECRET`
-- `ENODE_API_URL`, `REDIRECT_URI`
+- `ENODE_API_URL`
 
 ### `shared/engine.py` — Database Engine
 
@@ -127,8 +127,9 @@ Five tables defined as SQLAlchemy `DeclarativeBase` subclasses:
 
 | Model | Table | Key Fields |
 |---|---|---|
-| **Rec** | `recs` | `rec_id`, `name` (unique), `latitude`, `longitude`, `pod_prefix` |
-| **User** | `users` | `user_id` (PK), `telegram_id` (unique), `first_name`, `heating`, `electricity_rate`, `gas_rate`, `rec_id` (FK), `threshold_kwh`, `notification_interval_hours`, `last_notified_at` |
+| **Rec** | `recs` | `rec_id`, `name` (unique), `latitude`, `longitude` |
+| **RecCabina** | `rec_cabine` | `rec_id` (FK), `cabina_code` (compound PK) |
+| **User** | `users` | `user_id` (PK), `telegram_id` (unique), `first_name`, `pod`, `rec_id` (FK), `threshold_kwh`, `notification_interval_hours`, `last_notified_at` |
 | **Meter** | `meters` | `meter_id` (PK), `owner_user_id` (FK), `producer`, `model`, `site_name`, `consumption_enabled`, `production_enabled` |
 | **EnergyReading** | `energy_readings` | Compound PK (`meter_id`, `timestamp`), `power_kw` |
 | **WebhookEvent** | `webhook_events` | `id`, `delivery_id`, `event_type`, `meter_id`, `payload`, `received_at` |
@@ -138,7 +139,7 @@ Five tables defined as SQLAlchemy `DeclarativeBase` subclasses:
 All database operations in one module. Key functions:
 
 **Users:**
-- `upsert_user_by_telegram(telegram_id, first_name, heating, electricity_rate, gas_rate, rec_id)` — Create or update a user
+- `upsert_user_by_telegram(telegram_id, first_name, rec_id, pod)` — Create or update a user
 - `get_user_by_telegram_id(telegram_id)` — Find user by Telegram ID
 - `get_user_by_user_id(user_id)` — Find user by internal PK
 - `update_last_notified(telegram_id)` — Update notification timestamp
@@ -219,10 +220,10 @@ Builds a `telegram.ext.Application` with:
 **Commands:**
 | Command | Handler | Description |
 |---|---|---|
-| `/start` | `general.start` | Welcome message |
+| `/start` | `setup.setup_start` | Welcome message followed by profile setup (POD → REC) |
 | `/help` | `general.help_command` | List available commands |
 | `/status` | `general.status` | Show current configuration |
-| `/setup` | `setup.setup_start` | Multi-step profile configuration |
+| `/setup` | `setup.setup_start` | Alias for /start — same profile setup flow |
 | `/collegacontatore` | `enode.handle_link_meter` | Get Enode link to connect a smart meter |
 | `/energia` | `rec.handle_energy` | Show latest energy consumption/production from local database |
 | `/cancel` | `setup.setup_cancel` | Cancel ongoing setup |
@@ -240,19 +241,20 @@ All Italian user-facing messages in one file for easy customisation.
 
 ### `frontend/handlers/general.py` — Basic Commands
 
-- `start()` — Welcome with bot name
 - `help_command()` — Lists all commands
 - `status()` — Shows user's saved profile and linked meters from database
 
 ### `frontend/handlers/setup.py` — Setup Conversation
 
-A 4-step `ConversationHandler`:
-1. **Heating type** (`ASK_HEATING`): Choose from keyboard — *Heat pump*, *Gas boiler*, *Both*
-2. **Electricity rate** (`ASK_ELECTRICITY_RATE`): Enter €/kWh
-3. **Gas rate** (`ASK_GAS_RATE`): Enter €/Sm³
-4. **REC selection** (`ASK_REC`): Choose by number or name from the seeded list
+Both `/start` and `/setup` enter a 2-step `ConversationHandler`:
+1. **POD** (`ASK_POD`): User enters their POD code (electricity meter point of delivery).
+   The bot queries the GSE API to resolve the associated cabina primaria.
+2. **REC selection** (`ASK_REC`): RECs matching the cabina primaria are shown.
+   The user selects by number or name.
 
 On completion, calls `upsert_user_by_telegram()` to persist the profile.
+
+Use `/cancel` at any time to abort the conversation.
 
 ### `frontend/handlers/enode.py` — Enode Meter Commands
 
@@ -297,7 +299,6 @@ cp .env.example .env
 ```ini
 # Required
 TELEGRAM_TOKEN=your_bot_token_here
-TELEGRAM_REDIRECT_URI="https://t.me/your_bot_username"
 
 # Database (SQLite default, PostgreSQL for production)
 DATABASE_URL=sqlite:///db/energychief.db
@@ -383,9 +384,7 @@ users
 ├── user_id                     INTEGER PK
 ├── telegram_id                 INTEGER UNIQUE
 ├── first_name                  TEXT
-├── heating                     TEXT          -- "Heat pump" / "Gas boiler" / "Both"
-├── electricity_rate            REAL          -- €/kWh
-├── gas_rate                    REAL          -- €/Sm³
+├── pod                         TEXT          -- POD code (punto di prelievo)
 ├── rec_id                      INTEGER FK → recs.rec_id
 ├── threshold_kwh               REAL DEFAULT 2.0
 ├── notification_interval_hours INTEGER DEFAULT 4
